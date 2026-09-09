@@ -12,12 +12,11 @@ import org.springframework.stereotype.Component;
 @Component
 @ConfigurationProperties(prefix = "spring.kafka")
 public class KafkaProperties {
-
     private String bootstrapServers;
     private String sensorsTopic;
     private String snapshotsTopic;
     private String consumerGroupId;
     private int closeTimeoutSeconds;
-    private int PollTimeoutMillis;
+    private int pollTimeoutMillis;
     private int retries;
 }

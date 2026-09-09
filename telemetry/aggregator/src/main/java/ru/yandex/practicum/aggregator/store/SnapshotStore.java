@@ -17,7 +17,7 @@ import java.util.concurrent.ConcurrentHashMap;
 @Slf4j
 public class SnapshotStore {
 
-    private final Map<String, SensorsSnapshotAvro> snapshots = new ConcurrentHashMap<>();
+    private final Map<String, SensorsSnapshotAvro> snapshots = new ConcurrentHashMap<>(); //тут должен быть redis...
 
     public Optional<SensorsSnapshotAvro> handleEvent(SensorEventAvro event) {
         String hubId = event.getHubId();
@@ -29,8 +29,8 @@ public class SnapshotStore {
             SensorsSnapshotAvro newSnapshot = createSnapshot(event, sensorId);
             return Optional.of(newSnapshot);
         }
-        SensorsSnapshotAvro updated = updateSnapshot(oldSnapshot, event, sensorId);
-        return Optional.ofNullable(updated);
+        SensorsSnapshotAvro updatedSnapshot = updateSnapshot(oldSnapshot, event, sensorId);
+        return Optional.ofNullable(updatedSnapshot);
     }
 
     private SensorsSnapshotAvro createSnapshot(SensorEventAvro event, String sensorId) {

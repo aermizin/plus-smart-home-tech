@@ -1,4 +1,4 @@
-package ru.yandex.practicum.aggregator.serializer;
+package ru.yandex.practicum.deserializer;
 
 import org.apache.avro.Schema;
 import org.apache.avro.io.BinaryDecoder;
@@ -8,7 +8,7 @@ import org.apache.avro.specific.SpecificDatumReader;
 import org.apache.avro.specific.SpecificRecordBase;
 import org.apache.kafka.common.serialization.Deserializer;
 
-public class BaseAvroDeserializer<T extends SpecificRecordBase> implements Deserializer<T> {
+public class BaseAvroDeserializer <T extends SpecificRecordBase> implements Deserializer<T> {
 
     private final Schema schema;
     private final DecoderFactory decoderFactory;

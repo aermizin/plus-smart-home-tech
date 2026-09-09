@@ -1,4 +1,4 @@
-package ru.yandex.practicum.aggregator.service;
+package ru.yandex.practicum.aggregator.runner;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -16,6 +16,7 @@ import ru.yandex.practicum.kafka.telemetry.event.SensorsSnapshotAvro;
 
 import java.time.Duration;
 import java.util.List;
+import java.util.Optional;
 
 @Slf4j
 @Component
@@ -44,7 +45,7 @@ public class AggregationStarter {
                     log.info("Получено сообщение из партиции {}, со смещением {}",
                             record.partition(), record.offset());
 
-                    var snapshotOpt = snapshotStore.handleEvent(record.value());
+                    Optional<SensorsSnapshotAvro> snapshotOpt = snapshotStore.handleEvent(record.value());
 
                     if (snapshotOpt.isPresent()) {
                         sendSnapshot(snapshotOpt.get(), record.value().getHubId());

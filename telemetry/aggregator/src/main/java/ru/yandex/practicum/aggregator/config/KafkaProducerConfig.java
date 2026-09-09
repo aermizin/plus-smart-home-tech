@@ -27,13 +27,13 @@ public class KafkaProducerConfig {
 
     @Bean
     public KafkaProducer<String, SpecificRecordBase> kafkaProducer() {
-        Map<String, Object> config = new HashMap<>();
-        config.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, kafkaProperties.getBootstrapServers());
-        config.put(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, StringSerializer.class);
-        config.put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, GeneralAvroSerializer.class);
-        config.put(ProducerConfig.ACKS_CONFIG, "1");
-        config.put(ProducerConfig.RETRIES_CONFIG, kafkaProperties.getRetries());
-        kafkaProducer = new KafkaProducer<>(config);
+        Map<String, Object> props = new HashMap<>();
+        props.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, kafkaProperties.getBootstrapServers());
+        props.put(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, StringSerializer.class);
+        props.put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, GeneralAvroSerializer.class);
+        props.put(ProducerConfig.ACKS_CONFIG, "1");
+        props.put(ProducerConfig.RETRIES_CONFIG, kafkaProperties.getRetries());
+        kafkaProducer = new KafkaProducer<>(props);
         log.info("KafkaProducer создан с bootstrap.servers = {}", kafkaProperties.getBootstrapServers());
         return kafkaProducer;
     }
