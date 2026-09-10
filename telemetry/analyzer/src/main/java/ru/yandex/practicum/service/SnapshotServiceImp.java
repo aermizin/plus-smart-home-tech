@@ -16,8 +16,6 @@ import ru.yandex.practicum.service.extractor.SensorValueExtractor;
 
 import com.google.protobuf.Timestamp;
 
-import java.util.List;
-
 @Service
 @RequiredArgsConstructor
 @Slf4j
@@ -31,23 +29,10 @@ public class SnapshotServiceImp implements SnapshotService {
     @Transactional(readOnly = true)
     public void processSnapshot(SensorsSnapshotAvro snapshot) {
         String hubId = snapshot.getHubId();
-        log.info(">>> Snapshot hub={}, temp snapshot={}", hubId, snapshot);
 
-        List<Scenario> scenarios = scenarioRepository.findByHubId(hubId);
-        log.info(">>> Найдено сценариев для {}: {}", hubId, scenarios.size());
-
-        for (Scenario s : scenarios) {
-            log.info(">>> Проверяю сценарий {}, conditions={}, actions={}",
-                    s.getName(),
-                    s.getScenarioConditions().size(),
-                    s.getScenarioActions().size());
-            boolean active = isScenarioActive(s, snapshot);
-            log.info(">>> Сценарий {} active={}", s.getName(), active);
-        }
-
-        scenarios.stream()
-                .filter(s -> isScenarioActive(s, snapshot))
-                .forEach(s -> sendActions(s, snapshot));
+        scenarioRepository.findByHubId(hubId).stream()
+                .filter(scenario -> isScenarioActive(scenario, snapshot))
+                .forEach(scenario -> sendActions(scenario, snapshot));
     }
 
     private boolean isScenarioActive(Scenario scenario, SensorsSnapshotAvro snapshot) {
