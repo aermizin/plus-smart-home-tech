@@ -50,6 +50,11 @@ public class SensorValueExtractor {
     }
 
     public int extractValue(Object data, ConditionType conditionType) {
+        if (conditionType == null) {
+            throw new IllegalArgumentException(
+                    "ConditionType is null для датчика " + data.getClass().getSimpleName()
+            );
+        }
         Class<?> sensorClass = data.getClass();
         Map<ConditionType, Function<Object, Integer>> innerMap = extractors.get(sensorClass);
         if (innerMap == null) {

@@ -36,8 +36,10 @@ public class ScenarioManagementServiceImpl implements ScenarioManagementService 
         String scenarioName = scenarioAvro.getName();
         Scenario scenario = createOrUpdateScenario(hubId, scenarioName);
 
-        addConditionsToScenario(scenario, scenarioAvro.getConditions());
+        scenario.getScenarioConditions().clear();
+        scenario.getScenarioActions().clear();
 
+        addConditionsToScenario(scenario, scenarioAvro.getConditions());
         addActionsToScenario(scenario, scenarioAvro.getActions());
 
         scenarioRepository.save(scenario);
@@ -63,22 +65,24 @@ public class ScenarioManagementServiceImpl implements ScenarioManagementService 
     }
 
     private Scenario createOrUpdateScenario(String hubId, String name) {
-
-        Optional<Scenario> scenarioOpt = scenarioRepository.findByHubIdAndName(hubId, name);
-        if (scenarioOpt.isPresent()) {
-            log.debug("Сценарий {} уже существует для этого хаба {}", name, hubId);
-            Long scenarioId = scenarioOpt.get().getId();
-            scenarioRepository.deleteById(scenarioId);
-            log.info("Существующий сценарий с id {} удален", scenarioId);
-        }
-
-        Scenario scenario = scenarioMapper.toEntity(name, hubId);
-        log.info("Создан новый сценарий {} с hubId {}", name, hubId);
-        return scenario;
+        return scenarioRepository.findByHubIdAndName(hubId, name)
+                .orElseGet(() -> {
+                    log.info("Создан новый сценарий {} с hubId {}", name, hubId);
+                    return scenarioMapper.toEntity(name, hubId);
+                });
     }
 
     private void addConditionsToScenario(Scenario scenario, List<ScenarioConditionAvro> conditionsAvro) {
         for (var conditionAvro : conditionsAvro) {
+            log.info("DEBUG conditionAvro: type={}, operation={}, sensorId={}",
+                    conditionAvro.getType(),
+                    conditionAvro.getOperation(),
+                    conditionAvro.getSensorId());
+
+            if (conditionAvro.getType() == null || conditionAvro.getOperation() == null) {
+                log.warn("Пропускаю условие без type/operation для сценария {}", scenario.getName());
+                continue;
+            }
             Condition condition = conditionMapper.toEntity(conditionAvro);
             Object value = conditionAvro.getValue();
 
@@ -90,12 +94,9 @@ public class ScenarioManagementServiceImpl implements ScenarioManagementService 
                 condition.setValue(null);
             }
 
-            String sensorId = conditionAvro.getSensorId();  // ← исправлено
+            String sensorId = conditionAvro.getSensorId();
             Sensor sensor = sensorRepository.findById(sensorId)
-                    .orElseThrow(() -> {
-                        log.warn("Сенсор с id={} не найден", sensorId);
-                        return new EntityNotFoundException("Датчик не найден: " + sensorId);
-                    });
+                    .orElseThrow(() -> new EntityNotFoundException("Датчик не найден: " + sensorId));
 
             var scenarioCondition = ScenarioCondition.builder()
                     .scenario(scenario)
@@ -109,6 +110,14 @@ public class ScenarioManagementServiceImpl implements ScenarioManagementService 
 
     private void addActionsToScenario(Scenario scenario, List<DeviceActionAvro> actionsAvro) {
         for (var actionAvro : actionsAvro) {
+            log.info("DEBUG actionAvro: type={}, sensorId={}",
+                    actionAvro.getType(),
+                    actionAvro.getSensorId());
+
+            if (actionAvro.getType() == null) {
+                log.warn("Пропускаю действие без type для сценария {}", scenario.getName());
+                continue;
+            }
             Action action = actionMapper.toEntity(actionAvro);
 
             if (actionAvro.getValue() != null) {
@@ -119,10 +128,7 @@ public class ScenarioManagementServiceImpl implements ScenarioManagementService 
 
             String sensorId = actionAvro.getSensorId();
             Sensor sensor = sensorRepository.findById(sensorId)
-                    .orElseThrow(() -> {
-                        log.warn("Сенсор с id={} не найден", sensorId);
-                        return new EntityNotFoundException("Датчик не найден: " + sensorId);
-                    });
+                    .orElseThrow(() -> new EntityNotFoundException("Датчик не найден: " + sensorId));
 
             var scenarioAction = ScenarioAction.builder()
                     .scenario(scenario)

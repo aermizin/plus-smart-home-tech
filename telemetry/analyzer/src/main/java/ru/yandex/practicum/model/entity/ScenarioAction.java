@@ -5,7 +5,7 @@ import lombok.*;
 
 @Getter
 @Setter
-@EqualsAndHashCode
+@ToString(onlyExplicitlyIncluded = true)
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
@@ -14,7 +14,9 @@ import lombok.*;
 public class ScenarioAction {
 
     @EmbeddedId
-    private ScenarioActionId id;
+    @Builder.Default
+    @ToString.Include
+    private ScenarioActionId id = new ScenarioActionId();
 
     @ManyToOne(fetch = FetchType.LAZY)
     @MapsId("scenarioId")
@@ -26,7 +28,7 @@ public class ScenarioAction {
     @JoinColumn(name = "sensor_id")
     private Sensor sensor;
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.LAZY, cascade = CascadeType.ALL)
     @MapsId("actionId")
     @JoinColumn(name = "action_id")
     private Action action;

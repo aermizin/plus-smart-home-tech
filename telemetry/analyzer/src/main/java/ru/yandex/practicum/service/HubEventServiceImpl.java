@@ -10,8 +10,8 @@ import ru.yandex.practicum.kafka.telemetry.event.*;
 @RequiredArgsConstructor
 public class HubEventServiceImpl implements HubEventService {
 
-    private ScenarioManagementService scenarioManagementService;
-    private DeviceManagementService deviceManagementService;
+    private final ScenarioManagementService scenarioManagementService;
+    private final DeviceManagementService deviceManagementService;
 
     @Override
     public void processHubEvent(HubEventAvro event) {

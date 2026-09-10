@@ -8,17 +8,20 @@ import java.util.Set;
 
 @Getter
 @Setter
-@EqualsAndHashCode
+@EqualsAndHashCode(onlyExplicitlyIncluded = true)
+@ToString(onlyExplicitlyIncluded = true)
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
 @Entity
 @Table(name = "scenarios",
-       uniqueConstraints = @UniqueConstraint(columnNames = {"hubId", "name"}))
+        uniqueConstraints = @UniqueConstraint(columnNames = {"hubId", "name"}))
 public class Scenario {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @EqualsAndHashCode.Include
+    @ToString.Include
     private Long id;
 
     @Column(name = "hub_id")
