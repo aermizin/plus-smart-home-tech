@@ -23,6 +23,7 @@ public class AnalyzerApplication {
         // от пользовательских хабов
         Thread hubEventsThread = new Thread(hubEventProcessor);
         hubEventsThread.setName("HubEventHandlerThread");
+        hubEventsThread.setDaemon(true);
         hubEventsThread.start();
 
         // В текущем потоке начинаем обработку

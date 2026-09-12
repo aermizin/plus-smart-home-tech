@@ -94,7 +94,8 @@ public class SnapshotServiceImp implements SnapshotService {
             log.info("Действие отправлено: сценарий {}, датчик {}",
                     scenarioName, scenarioAction.getSensor().getId());
         } catch (Exception e) {
-            log.error("Ошибка отправки действия для сценария {}: {}", scenarioName, e.getMessage());
+            log.error("Ошибка отправки действия для сценария {}: {}", scenarioName, e);
+            throw e;
         }
     }
 }

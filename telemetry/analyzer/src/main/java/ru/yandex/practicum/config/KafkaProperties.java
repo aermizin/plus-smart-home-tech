@@ -2,22 +2,16 @@ package ru.yandex.practicum.config;
 
 import lombok.Getter;
 import lombok.Setter;
-import lombok.ToString;
 
 import org.springframework.boot.context.properties.ConfigurationProperties;
-import org.springframework.stereotype.Component;
 
 @Getter
 @Setter
-@ToString(callSuper = true)
-@Component
-@ConfigurationProperties(prefix = "spring.kafka")
+@ConfigurationProperties(prefix = "analyzer.kafka")
 public class KafkaProperties {
     private String bootstrapServers;
     private Topic topic = new Topic();
     private Consumer consumer = new Consumer();
-    private int closeTimeoutSeconds;
-    private int retries;
 
     @Getter
     @Setter
