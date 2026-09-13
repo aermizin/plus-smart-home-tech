@@ -50,16 +50,16 @@ public class AggregationStarter {
             kafkaConsumer.subscribe(List.of(kafkaProperties.getTopic().getSensorTopic()));
 
             while (true) {
-                ConsumerRecords<String, SensorEventAvro> records =
+                ConsumerRecords<String, SensorEventAvro> batch =
                         kafkaConsumer.poll(Duration.ofMillis(kafkaProperties.getConsumer().getPollTimeoutMs()));
 
-                if (records.isEmpty()) {
+                if (batch.isEmpty()) {
                     continue;
                 }
 
                 List<Future<RecordMetadata>> sendFutures = new ArrayList<>();
 
-                for (var record : records) {
+                for (var record : batch) {
                     log.info("Получено событие из партиции {}, со смещением {}",
                             record.partition(), record.offset());
 
@@ -75,7 +75,13 @@ public class AggregationStarter {
                 boolean allSent = awaitAllSends(sendFutures);
 
                 if (!allSent) {
-                    log.warn("Не все snapshot'ы отправлены — события будут переобработаны");
+                    log.warn("Не все snapshot'ы отправлены — откатываем позицию в начало партиции");
+
+                    batch.partitions().forEach(partition -> {
+                        long firstOffset = batch.records(partition).get(0).offset();
+                        kafkaConsumer.seek(partition, firstOffset);
+                    });
+
                     continue;
                 }
 
