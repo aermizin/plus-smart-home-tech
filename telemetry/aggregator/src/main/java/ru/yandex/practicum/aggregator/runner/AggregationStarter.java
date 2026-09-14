@@ -75,20 +75,23 @@ public class AggregationStarter {
                 boolean allSent = awaitAllSends(sendFutures);
 
                 if (!allSent) {
-                    log.warn("Не все snapshot'ы отправлены — откатываем позицию в начало партиции");
+                    log.warn("Не все snapshot'ы отправлены — откатываем позиции в начало партиции");
 
                     batch.partitions().forEach(partition -> {
-                        long firstOffset = batch.records(partition).get(0).offset();
-                        kafkaConsumer.seek(partition, firstOffset);
+                        try {
+                            long firstOffset = batch.records(partition).get(0).offset();
+                            kafkaConsumer.seek(partition, firstOffset);
+                        } catch (IllegalStateException e) {
+                            log.warn("Не удалось сделать seek по партиции — вероятно, rebalance", e);
+                        }
                     });
-
                     continue;
                 }
 
                 try {
                     kafkaConsumer.commitSync();
                 } catch (CommitFailedException e) {
-                    log.warn("Commit отклонён batch будет переобработан", e);
+                    log.warn("Commit отклонён — партиции ушли из-за rebalance", e);
                 }
             }
 
@@ -107,13 +110,7 @@ public class AggregationStarter {
                 hubId,
                 snapshot);
 
-        return kafkaProducer.send(record, (metadata, exception) -> {
-            if (exception != null) {
-                log.error("Ошибка отправки Snapshot для хаба {}", hubId, exception);
-            } else {
-                log.info("Snapshot для хаба {} отправлен в offset {}", hubId, metadata.offset());
-            }
-        });
+        return kafkaProducer.send(record);
     }
 
     private boolean awaitAllSends(List<Future<RecordMetadata>> futures) {
@@ -134,7 +131,7 @@ public class AggregationStarter {
     }
 
     @PreDestroy
-    public void shutdown() {
+    void shutdown() {
         log.info("Останавливаем AggregationStarter.");
 
         kafkaConsumer.wakeup();
