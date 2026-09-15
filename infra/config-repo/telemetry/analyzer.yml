@@ -1,0 +1,41 @@
+analyzer:
+  kafka:
+    bootstrap-servers: localhost:9092
+    topic:
+      snapshots-topic: telemetry.snapshots.v1
+      hub-events-topic: telemetry.hubs.v1
+    consumer:
+      snapshot:
+        group-id: analyzer-snapshot-group
+        poll-timeout-ms: 500
+        enable-auto-commit: false
+        auto-offset-reset: earliest
+      hub-event:
+        group-id: analyzer-hub-event-group
+        poll-timeout-ms: 3000
+        enable-auto-commit: false
+        auto-offset-reset: earliest
+
+grpc:
+  client:
+    hub-router:
+      address: static://localhost:59090
+      negotiationType: plaintext
+      enableKeepAlive: true
+      keepAliveWithoutCalls: true
+
+spring:
+  datasource:
+    driver-class-name: org.postgresql.Driver
+    url: jdbc:postgresql://localhost:5432/telemetry_analyzer
+    username: dbuser
+    password: 12345
+  jpa:
+    show-sql: true
+  liquibase:
+    change-log: classpath:db/changelog/db.changelog-master.yaml
+
+logging:
+  level:
+    org.hibernate.SQL: DEBUG
+    org.hibernate.orm.jdbc.bind: TRACE

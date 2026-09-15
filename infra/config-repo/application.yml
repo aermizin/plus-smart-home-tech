@@ -1,0 +1,19 @@
+spring:
+  main:
+    banner-mode: off
+    log-startup-info: false
+  kafka:
+    bootstrap-servers: localhost:9092
+  jpa:
+    hibernate:
+      ddl-auto: none
+  liquibase:
+    enabled: true
+    drop-first: false
+
+logging:
+  level:
+    ru.yandex.practicum.telemetry: WARN
+    org:
+      springframework: ERROR
+      apache.kafka: WARN

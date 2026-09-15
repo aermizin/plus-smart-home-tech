@@ -1,0 +1,13 @@
+aggregator:
+  kafka:
+    bootstrap-servers: localhost:9092
+    topic:
+      snapshots-topic: telemetry.snapshots.v1
+      sensor-topic: telemetry.sensors.v1
+    consumer:
+      group-id: aggregator-group
+      poll-timeout-ms: 500
+      enable-auto-commit: false
+      auto-offset-reset: earliest
+    close-timeout-seconds: 30
+    retries: 3
