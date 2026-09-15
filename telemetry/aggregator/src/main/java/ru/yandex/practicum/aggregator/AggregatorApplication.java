@@ -4,7 +4,7 @@ import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.context.properties.ConfigurationPropertiesScan;
 import org.springframework.context.ConfigurableApplicationContext;
-import ru.yandex.practicum.aggregator.service.AggregationStarter;
+import ru.yandex.practicum.aggregator.runner.AggregationStarter;
 
 @SpringBootApplication
 @ConfigurationPropertiesScan

@@ -32,7 +32,8 @@ public class KafkaSenderServiceImpl implements KafkaSenderService {
                 null,
                 event.getTimestamp().toEpochMilli(),
                 event.getHubId(),
-                avroEvent);
+                avroEvent
+        );
         producer.send(record);
     }
 
@@ -44,7 +45,8 @@ public class KafkaSenderServiceImpl implements KafkaSenderService {
                 null,
                 event.getTimestamp().toEpochMilli(),
                 event.getHubId(),
-                avroEvent);
+                avroEvent
+        );
         producer.send(record);
     }
 }
