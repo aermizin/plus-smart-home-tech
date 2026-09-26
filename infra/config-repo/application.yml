@@ -13,6 +13,7 @@ spring:
 
 logging:
   level:
+    ru.yandex.practicum.commerce: WARN
     ru.yandex.practicum.telemetry: WARN
     org:
       springframework: ERROR
