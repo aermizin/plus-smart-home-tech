@@ -1,8 +1,10 @@
 package ru.yandex.practicum.inventory.exception;
 
+import jakarta.validation.ConstraintViolationException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.orm.ObjectOptimisticLockingFailureException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -29,6 +31,36 @@ public class GlobalExceptionHandler {
     public ErrorResponse handleInsufficientStock(InsufficientStockException e) {
         log.warn("Недостаточно товара: {}", e.getMessage());
         return new ErrorResponse(HttpStatus.CONFLICT.value(), e.getMessage());
+    }
+
+    @ExceptionHandler(ConflictException.class)
+    @ResponseStatus(HttpStatus.CONFLICT)
+    public ErrorResponse handleConflict (ConflictException e) {
+        log.warn("Конфликт: {}", e.getMessage());
+        return new ErrorResponse(HttpStatus.CONFLICT.value(), e.getMessage());
+    }
+
+    @ExceptionHandler(ConstraintViolationException.class)
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    public ErrorResponse handleConstraintViolation(ConstraintViolationException e) {
+        Map<String, String> errors = new HashMap<>();
+        e.getConstraintViolations().forEach(violation -> {
+            String path = violation.getPropertyPath().toString();
+            String field = path.contains(".")
+                    ? path.substring(path.lastIndexOf('.') + 1)
+                    : path;
+            errors.put(field, violation.getMessage());
+        });
+        log.warn("Ошибка валидации параметров: {}", errors);
+        return new ErrorResponse(HttpStatus.BAD_REQUEST.value(), "Ошибка валидации", errors);
+    }
+
+    @ExceptionHandler(HttpMessageNotReadableException.class)
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    public ErrorResponse handleHttpMessageNotReadable(HttpMessageNotReadableException e) {
+        log.warn("Ошибка чтения тела запроса: {}", e.getMessage());
+        return new ErrorResponse(HttpStatus.BAD_REQUEST.value(), "Некорректный формат JSON в теле запроса",
+                null);
     }
 
     /**

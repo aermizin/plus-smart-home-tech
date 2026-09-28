@@ -2,10 +2,13 @@ package ru.yandex.practicum.product.dto;
 
 import jakarta.validation.constraints.DecimalMin;
 import jakarta.validation.constraints.Size;
+import ru.yandex.practicum.product.validation.NullableNotBlank;
+
 import java.math.BigDecimal;
 
 public record UpdateProductRequest(
 
+        @NullableNotBlank
         @Size(max = 255, message = "Название не может быть длиннее 255 символов")
         String name,
 
