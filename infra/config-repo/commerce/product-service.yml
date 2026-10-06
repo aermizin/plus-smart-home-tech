@@ -7,14 +7,14 @@ spring:
     url: jdbc:postgresql://localhost:5432/product_db
     username: dbuser
     password: 12345
-  jpa:
-    show-sql: true
+
   liquibase:
-    change-log: classpath:db.changelog/db.changelog-master.yml
+    change-log: classpath:db/changelog/db.changelog-master.yml
 
 logging:
+  file:
+    name: logs/product-service.log
   level:
     org.hibernate.SQL: DEBUG
-    org.hibernate.orm.jdbc.bind: TRACE
     liquibase: DEBUG
     org.springframework.boot.autoconfigure.liquibase: DEBUG

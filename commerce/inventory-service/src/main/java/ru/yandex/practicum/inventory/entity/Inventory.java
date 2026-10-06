@@ -34,5 +34,4 @@ public class Inventory {
     public Integer getAvailableQuantity() {
         return quantity - reservedQuantity;
     }
-
 }

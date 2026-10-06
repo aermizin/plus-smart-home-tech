@@ -48,6 +48,21 @@ public class ProductServiceImpl implements ProductService {
 
     @Override
     @Transactional(readOnly = true)
+    public List<ProductDto> getProductsByIds(List<Long> ids) {
+        if (ids.isEmpty()) {
+            return List.of();
+        }
+
+        List<Product> products = productRepository.findByIdIn(ids);
+        log.debug("Найдено {} товаров", products.size());
+
+        return products.stream()
+                .map(productMapper::toDto)
+                .toList();
+    }
+
+    @Override
+    @Transactional(readOnly = true)
     public List<ProductDto> searchProducts(String query) {
         List<Product> products = productRepository.findByNameContainingIgnoreCase(query);
 

@@ -1,5 +1,6 @@
 package ru.yandex.practicum.order.exception;
 
+import jakarta.validation.ConstraintViolationException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
@@ -34,12 +35,54 @@ public class GlobalExceptionHandler {
         return new ErrorResponse(HttpStatus.BAD_REQUEST.value(), "Ошибка валидации", errors);
     }
 
+    @ExceptionHandler(ConstraintViolationException.class)
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    public ErrorResponse handleConstraintViolation(ConstraintViolationException e) {
+        Map<String, String> errors = new HashMap<>();
+        e.getConstraintViolations().forEach(violation -> {
+            String path = violation.getPropertyPath().toString();
+            String field = path.contains(".")
+                    ? path.substring(path.lastIndexOf('.') + 1)
+                    : path;
+            errors.put(field, violation.getMessage());
+        });
+        log.warn("Ошибка валидации параметров: {}", errors);
+        return new ErrorResponse(HttpStatus.BAD_REQUEST.value(), "Ошибка валидации", errors);
+    }
+
+    @ExceptionHandler(CompensationFailedException.class)
+    @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
+    public ErrorResponse handleCompensationFailed(CompensationFailedException e) {
+        return new ErrorResponse(
+                HttpStatus.INTERNAL_SERVER_ERROR.value(),
+                "Внутренняя ошибка сервера"
+        );
+    }
+
+    @ExceptionHandler(OrderProcessingException.class)
+    @ResponseStatus(HttpStatus.UNPROCESSABLE_ENTITY)
+    public ErrorResponse handleValidation(OrderProcessingException e) {
+        log.warn("Бизнес-ошибка: {}", e.getMessage());
+        return new ErrorResponse(HttpStatus.UNPROCESSABLE_ENTITY.value(), e.getMessage());
+    }
+
     @ExceptionHandler(HttpMessageNotReadableException.class)
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     public ErrorResponse handleHttpMessageNotReadable(HttpMessageNotReadableException e) {
         log.warn("Ошибка чтения тела запроса: {}", e.getMessage());
-        return new ErrorResponse(HttpStatus.BAD_REQUEST.value(), "Некорректный формат JSON в теле запроса",
-                null);
+        return new ErrorResponse(HttpStatus.BAD_REQUEST.value(), "Некорректный формат JSON в теле запроса");
+    }
+
+    @ExceptionHandler(ServiceUnavailableException.class)
+    @ResponseStatus(HttpStatus.SERVICE_UNAVAILABLE)
+    public ErrorResponse handleServiceUnavailable(ServiceUnavailableException e) {
+        return new ErrorResponse(HttpStatus.SERVICE_UNAVAILABLE.value(), e.getMessage());
+    }
+
+    @ExceptionHandler(ExternalServiceException.class)
+    @ResponseStatus(HttpStatus.BAD_GATEWAY)
+    public ErrorResponse handleExternalService(ExternalServiceException e) {
+        return new ErrorResponse(HttpStatus.BAD_GATEWAY.value(), e.getMessage());
     }
 
     @ExceptionHandler(Exception.class)

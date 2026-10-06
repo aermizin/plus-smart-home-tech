@@ -7,13 +7,26 @@ spring:
     url: jdbc:postgresql://localhost:5432/order_db
     username: dbuser
     password: 12345
-  jpa:
-    show-sql: true
+
   liquibase:
     change-log: classpath:db/changelog/db.changelog-master.yml
+
+  cloud:
+    openfeign:
+      client:
+        config:
+          default:
+            loggerLevel: basic
+            connectTimeout: 1000
+            readTimeout: 3000
+          inventory-service:
+            connectTimeout: 1000
+            readTimeout: 2000
+
 logging:
+  file:
+    name: logs/order-service.log
   level:
     org.hibernate.SQL: DEBUG
-    org.hibernate.orm.jdbc.bind: TRACE
     liquibase: DEBUG
-    org.springframework.boot.autoconfigure.liquibase: DEBUG
+    ru.yandex.practicum.order.feign: DEBUG
