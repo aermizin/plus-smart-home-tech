@@ -2,21 +2,29 @@ package ru.yandex.practicum.order;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 import ru.yandex.practicum.order.dto.CreateOrderRequest;
 import ru.yandex.practicum.order.dto.OrderItemRequest;
+import ru.yandex.practicum.order.feign.invetory.InventoryClient;
+import ru.yandex.practicum.order.feign.invetory.dto.OrderReserveResponse;
+import ru.yandex.practicum.order.feign.product.ProductClient;
+import ru.yandex.practicum.order.feign.product.dto.OrderProductDto;
 
 import java.math.BigDecimal;
 import java.util.List;
 import java.util.Map;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.anyList;
+import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 
@@ -31,14 +39,37 @@ class OrderServiceAcceptanceTest {
     @Autowired
     private ObjectMapper json;
 
+    @MockBean
+    private ProductClient productClient;
+
+    @MockBean
+    private InventoryClient inventoryClient;
+
+    @BeforeEach
+    void setup() {
+        when(productClient.getProductsByIds(anyList()))
+                .thenReturn(List.of(
+                        new OrderProductDto(1L, "Acceptance Smart Lamp", null,
+                                new BigDecimal("3490.00"), true),
+                        new OrderProductDto(2L, "Acceptance Smart Plug", null,
+                                new BigDecimal("1290.00"), true)
+                ));
+
+        when(inventoryClient.reserveStocks(anyList()))
+                .thenReturn(List.of(
+                        new OrderReserveResponse(1L, 2, 10),
+                        new OrderReserveResponse(2L, 1, 5)
+                ));
+    }
+
     @Test
     void shouldCreateOrderStoreProductSnapshotAndFindOrderByIdAndEmail() throws Exception {
         CreateOrderRequest request = new CreateOrderRequest(
                 "Acceptance Buyer",
                 "acceptance-buyer@example.com",
                 List.of(
-                        new OrderItemRequest(1L, "Acceptance Smart Lamp", 2, new BigDecimal("3490.00")),
-                        new OrderItemRequest(2L, "Acceptance Smart Plug", 1, new BigDecimal("1290.00"))
+                        new OrderItemRequest(1L, 2),
+                        new OrderItemRequest(2L, 1)
                 )
         );
 
@@ -53,8 +84,8 @@ class OrderServiceAcceptanceTest {
                 .as("Созданный заказ должен содержать поле id")
                 .isNotNull();
         assertThat(created.get("status"))
-                .as("На текущем этапе новый заказ должен сохраняться в статусе CREATED")
-                .isEqualTo("CREATED");
+                .as("На текущем этапе новый заказ должен сохраняться в статусе CONFIRMED")
+                .isEqualTo("CONFIRMED");
         assertThat(asDecimal(created.get("totalPrice")))
                 .as("order-service должен сам рассчитывать totalPrice по снимку товаров из запроса")
                 .isEqualByComparingTo("8270.00");
@@ -75,7 +106,7 @@ class OrderServiceAcceptanceTest {
                 .isEqualTo("acceptance-buyer@example.com");
 
         MvcResult byEmailResponse = mvc.perform(get("/api/orders/by-email")
-                .param("email", "acceptance-buyer@example.com"))
+                        .param("email", "acceptance-buyer@example.com"))
                 .andReturn();
 
         assertThat(status(byEmailResponse))
@@ -105,32 +136,32 @@ class OrderServiceAcceptanceTest {
                 .containsKeys("message", "validationErrors");
     }
 
-    private MvcResult postJson(String url, Object body) throws Exception {
-        return mvc.perform(post(url)
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(json.writeValueAsString(body)))
+    private MvcResult postJson(String path, Object body) throws Exception {
+        return mvc.perform(post(path)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(json.writeValueAsString(body)))
                 .andReturn();
     }
 
-    private static int status(MvcResult result) {
+    private int status(MvcResult result) {
         return result.getResponse().getStatus();
     }
 
     private Map<String, Object> readMap(MvcResult result) throws Exception {
-        return json.readValue(result.getResponse().getContentAsString(), new TypeReference<>() {
-        });
+        return json.readValue(result.getResponse().getContentAsString(), new TypeReference<>() {});
     }
 
     private List<Map<String, Object>> readList(MvcResult result) throws Exception {
-        return json.readValue(result.getResponse().getContentAsString(), new TypeReference<>() {
-        });
+        return json.readValue(result.getResponse().getContentAsString(), new TypeReference<>() {});
     }
 
-    private static Long asLong(Object value) {
-        return value == null ? null : ((Number) value).longValue();
+    private Long asLong(Object value) {
+        if (value == null) return null;
+        return ((Number) value).longValue();
     }
 
-    private static BigDecimal asDecimal(Object value) {
+    private BigDecimal asDecimal(Object value) {
+        if (value == null) return null;
         return new BigDecimal(value.toString());
     }
 }
