@@ -1,15 +1,20 @@
 package ru.yandex.practicum.order.service;
 
+import jakarta.persistence.*;
+import lombok.EqualsAndHashCode;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import ru.yandex.practicum.order.dto.CreateOrderRequest;
 import ru.yandex.practicum.order.dto.OrderDto;
+import ru.yandex.practicum.order.dto.OrderItemDto;
 import ru.yandex.practicum.order.dto.OrderItemRequest;
 import ru.yandex.practicum.order.entity.Order;
 import ru.yandex.practicum.order.entity.OrderItem;
 import ru.yandex.practicum.order.entity.StatusOrder;
+import ru.yandex.practicum.order.exception.InventoryServiceUnavailableException;
 import ru.yandex.practicum.order.exception.OrderProcessingException;
+import ru.yandex.practicum.order.exception.ProductServiceUnavailableException;
 import ru.yandex.practicum.order.feign.invetory.InventoryClient;
 import ru.yandex.practicum.order.feign.invetory.dto.OrderReserveRequest;
 import ru.yandex.practicum.order.feign.invetory.dto.OrderReserveResponse;
@@ -18,6 +23,8 @@ import ru.yandex.practicum.order.feign.product.dto.OrderProductDto;
 import ru.yandex.practicum.order.mapper.OrderItemMapper;
 import ru.yandex.practicum.order.mapper.OrderMapper;
 
+import java.math.BigDecimal;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -42,7 +49,14 @@ public class OrderOrchestrationService {
                 .distinct()
                 .toList();
 
-        List<OrderProductDto> orderProducts = productClient.getProductsByIds(productIds);
+        List<OrderProductDto> orderProducts;
+
+        try {
+            orderProducts = productClient.getProductsByIds(productIds);
+        } catch (ProductServiceUnavailableException e) {
+            return createPendingOrder(request, null, "Каталог недоступен");
+        }
+
         Map<Long, OrderProductDto> products = validateProducts(orderProducts, productIds);
         log.debug("Получено товаров {} для резервирования", products.size());
 
@@ -54,7 +68,13 @@ public class OrderOrchestrationService {
                 .map(entry -> new OrderReserveRequest(entry.getKey(), entry.getValue()))
                 .toList();
 
-        List<OrderReserveResponse> reserveResponses = inventoryClient.reserveStocks(reserveRequests);
+        List<OrderReserveResponse> reserveResponses;
+
+        try {
+            reserveResponses = inventoryClient.reserveStocks(reserveRequests);
+        } catch (InventoryServiceUnavailableException e) {
+            return createPendingOrder(request, products, "Склад недоступен");
+        }
 
         try {
             validateReservations(reserveRequests, reserveResponses);
@@ -73,9 +93,42 @@ public class OrderOrchestrationService {
             return orderMapper.toDto(savedOrder);
         } catch (Exception e) {
             log.error("Сбой после резерва, откатываем резерв", e);
-            inventoryClient.releaseStocks(reserveRequests);
+            try {
+                inventoryClient.releaseStocks(reserveRequests);
+            } catch (Exception releaseEx) {
+                log.error("Не удалось откатить резерв", releaseEx);
+            }
             throw e;
         }
+    }
+
+    private OrderDto createPendingOrder(CreateOrderRequest request, Map<Long, OrderProductDto> products, String reason) {
+
+        Order order = orderMapper.toEntity(request);
+        order.setStatus(StatusOrder.PENDING_CONFIRMATION);
+        order.setStatusDetails(reason + ". Требуется ручная проверка");
+
+        for (OrderItemRequest item : request.items()) {
+            OrderItem orderItem = new OrderItem();
+            orderItem.setProductId(item.productId());
+            orderItem.setQuantity(item.quantity());
+
+            if (products != null) {
+                OrderProductDto product = products.get(item.productId());
+                orderItem.setProductName(product.name());
+                orderItem.setPrice(product.price());
+            } else {
+                orderItem.setProductName("Товар #" + item.productId() + " (ожидает проверки)");
+                orderItem.setPrice(BigDecimal.ZERO);
+            }
+            order.addItem(orderItem);
+        }
+
+        order.recalculateTotalPrice();
+
+        Order savedOrder = orderPersistenceService.saveOrder(order);
+        log.debug("Создан PENDING_CONFIRMATION заказ id = {}", savedOrder.getId());
+        return orderMapper.toDto(savedOrder);
     }
 
     private Map<Long, OrderProductDto> validateProducts(List<OrderProductDto> orderProducts,

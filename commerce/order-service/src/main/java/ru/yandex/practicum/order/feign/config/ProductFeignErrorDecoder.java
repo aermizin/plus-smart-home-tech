@@ -6,7 +6,6 @@ import lombok.extern.slf4j.Slf4j;
 import ru.yandex.practicum.order.exception.ExternalServiceException;
 import ru.yandex.practicum.order.exception.ServiceUnavailableException;
 
-@Slf4j
 public class ProductFeignErrorDecoder implements ErrorDecoder {
 
     @Override
@@ -14,16 +13,13 @@ public class ProductFeignErrorDecoder implements ErrorDecoder {
         int status = response.status();
 
         if (status == 503) {
-            log.warn("Сервис недоступен: {}", methodKey);
             return new ServiceUnavailableException("Сервис временно недоступен, повторите позже");
         }
 
         if (status >= 500) {
-            log.error("Ошибка внешнего сервиса: {} status={}", methodKey, status);
             return new ExternalServiceException("Ошибка внешнего сервиса");
         }
 
-        log.warn("Необработанный статус: {} status={}", methodKey, status);
         return new ExternalServiceException("Ошибка внешнего сервиса");
     }
 }

@@ -10,7 +10,9 @@ import ru.yandex.practicum.order.feign.invetory.dto.OrderReserveResponse;
 
 import java.util.List;
 
-@FeignClient(name = "inventory-service", configuration = InventoryFeignConfig.class)
+@FeignClient(name = "inventory-service",
+        configuration = InventoryFeignConfig.class,
+        fallbackFactory = InventoryClientFallbackFactory.class)
 public interface InventoryClient {
 
     @PostMapping("/api/inventory/reserve")
@@ -20,5 +22,5 @@ public interface InventoryClient {
     List<OrderReserveResponse> reserveStocks(@RequestBody List<OrderReserveRequest> requests);
 
     @PostMapping("/api/inventory/release/batch")
-    void releaseStocks(@RequestBody List<OrderReserveRequest> reserveRequests);
+    void releaseStocks(@RequestBody List<OrderReserveRequest> requests);
 }

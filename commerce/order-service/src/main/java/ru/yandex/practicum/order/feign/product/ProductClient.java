@@ -9,7 +9,9 @@ import ru.yandex.practicum.order.feign.product.dto.OrderProductDto;
 
 import java.util.List;
 
-@FeignClient(name = "product-service", configuration = ProductFeignConfig.class)
+@FeignClient(name = "product-service",
+        configuration = ProductFeignConfig.class,
+        fallbackFactory = ProductClientFallbackFactory.class)
 public interface ProductClient {
 
     @GetMapping("/api/products/{id}")
