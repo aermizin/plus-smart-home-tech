@@ -19,4 +19,6 @@ public interface ProductService {
     ProductDto createProduct(CreateProductRequest request);
 
     ProductDto updateProduct(Long id, UpdateProductRequest request);
+
+    List<ProductDto> getProductsByIds(List<Long> ids);
 }

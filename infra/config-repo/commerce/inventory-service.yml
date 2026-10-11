@@ -7,13 +7,15 @@ spring:
     url: jdbc:postgresql://localhost:5432/inventory_db
     username: dbuser
     password: 12345
-  jpa:
-    show-sql: true
+
   liquibase:
     change-log: classpath:db/changelog/db.changelog-master.yml
+
 logging:
+  logging:
+    file:
+      name: logs/inventory-service.log
   level:
     org.hibernate.SQL: DEBUG
-    org.hibernate.orm.jdbc.bind: TRACE
     liquibase: DEBUG
     org.springframework.boot.autoconfigure.liquibase: DEBUG

@@ -29,6 +29,11 @@ public class ProductController {
         return productService.getProductById(id);
     }
 
+    @GetMapping(params = "id")
+    public List<ProductDto> getProductsByIds(@RequestParam("id") List<Long> ids) {
+        return productService.getProductsByIds(ids);
+    }
+
     @GetMapping("/search")
     public List<ProductDto> searchProducts(@RequestParam String query) {
         return productService.searchProducts(query);

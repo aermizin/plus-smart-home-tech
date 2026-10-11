@@ -1,10 +1,13 @@
 package ru.yandex.practicum.inventory.dto;
 
 public record ReserveResponse(
+        Long productId,
 
-        boolean success,
+        Integer reservedQuantity,
 
         Integer availableQuantity,
+
+        boolean success,
 
         String message
 ) {

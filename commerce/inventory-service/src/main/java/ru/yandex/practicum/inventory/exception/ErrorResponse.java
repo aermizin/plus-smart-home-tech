@@ -11,13 +11,16 @@ public record ErrorResponse(
 
         LocalDateTime timestamp,
 
+        ErrorCode code,
+
         Map<String, String> validationErrors
 ) {
-    public ErrorResponse(int status, String message) {
-        this(status, message, LocalDateTime.now(), null);
+
+    public ErrorResponse(int status, String message, ErrorCode code) {
+        this(status, message, LocalDateTime.now(), code, null);
     }
 
-    public ErrorResponse(int status, String message, Map<String, String> validationErrors) {
-        this(status, message, LocalDateTime.now(), validationErrors);
+    public ErrorResponse(int status, String message,ErrorCode code, Map<String, String> validationErrors) {
+        this(status, message, LocalDateTime.now(), code, validationErrors);
     }
 }
