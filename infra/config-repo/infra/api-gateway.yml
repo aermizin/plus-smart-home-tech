@@ -6,7 +6,8 @@ spring:
     gateway:
       discovery:
         locator:
-          enabled: false
+          enabled: true
+
       globalcors:
         add-to-simple-url-handler-mapping: true
         cors-configurations:
@@ -29,6 +30,43 @@ spring:
             allow-credentials: true
             max-age: 3600
       routes:
+        - id: product-service-read
+          uri: lb://product-service
+          predicates:
+            - Path=/api/products/**,/api/categories/**
+            - Method=GET
+          filters:
+            - name: Retry
+              args:
+                retries: 2
+                statuses:
+                  - BAD_GATEWAY
+                  - SERVICE_UNAVAILABLE
+                  - GATEWAY_TIMEOUT
+                methods:
+                  - GET
+                backoff:
+                  firstBackoff: 100ms
+                  maxBackoff: 500ms
+
+        - id: inventory-service-read
+          uri: lb://inventory-service
+          predicates:
+            - Path=/api/inventory/**
+            - Method=GET
+          filters:
+            - name: Retry
+              args:
+                retries: 2
+                statuses:
+                  - BAD_GATEWAY
+                  - SERVICE_UNAVAILABLE
+                  - GATEWAY_TIMEOUT
+                methods:
+                  - GET
+                backoff:
+                  firstBackoff: 100ms
+                  maxBackoff: 500ms
         - id: order-service-read
           uri: lb://order-service
           predicates:
