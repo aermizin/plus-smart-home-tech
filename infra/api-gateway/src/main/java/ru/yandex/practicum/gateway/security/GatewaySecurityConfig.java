@@ -34,11 +34,6 @@ public class GatewaySecurityConfig {
                         .pathMatchers(HttpMethod.GET, "/api/categories/**").permitAll()
                         .pathMatchers(HttpMethod.GET, "/api/inventory/**").permitAll()
 
-                        .pathMatchers(HttpMethod.POST, "/api/inventory/reserve").hasRole("USER")
-                        .pathMatchers(HttpMethod.POST, "/api/inventory/reserves").hasRole("USER")
-                        .pathMatchers(HttpMethod.POST, "/api/inventory/release").hasRole("USER")
-                        .pathMatchers(HttpMethod.POST, "/api/inventory/release/batch").hasRole("USER")
-
                         .pathMatchers(HttpMethod.GET, "/api/orders/*").hasRole("USER")
                         .pathMatchers(HttpMethod.POST, "/api/orders").hasRole("USER")
 
@@ -46,8 +41,8 @@ public class GatewaySecurityConfig {
                         .pathMatchers(HttpMethod.POST, "/api/products").hasRole("ADMIN")
                         .pathMatchers(HttpMethod.PATCH, "/api/products/*").hasRole("ADMIN")
 
-                        .pathMatchers("/api/inventory").hasRole("ADMIN")
-                        .pathMatchers("/api/categories").hasRole("ADMIN")
+                        .pathMatchers("/api/inventory/**").hasRole("ADMIN")
+                        .pathMatchers("/api/categories/**").hasRole("ADMIN")
                         .anyExchange().denyAll()
                 )
                 .cors(Customizer.withDefaults())

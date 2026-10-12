@@ -10,6 +10,7 @@ import org.springframework.test.web.reactive.server.WebTestClient;
 import org.springframework.web.reactive.function.server.RouterFunction;
 import org.springframework.web.reactive.function.server.ServerResponse;
 
+import java.net.URI;
 import java.nio.charset.StandardCharsets;
 import java.util.Base64;
 
@@ -96,9 +97,13 @@ public class GatewaySecurityConfigTest  {
     @Test
     void corsPreflight_isPublic() {
         webTestClient.options()
-                .uri("/api/orders")
+                .uri(URI.create("http://localhost/api/orders"))    // ← схема http
+                .header("Origin", "http://localhost:8443")
+                .header("Access-Control-Request-Method", "POST")
                 .exchange()
-                .expectStatus().isOk();
+                .expectStatus().isOk()
+                .expectHeader().valueEquals("Access-Control-Allow-Origin", "http://localhost:8443")
+                .expectHeader().exists("Access-Control-Allow-Methods");
     }
 
     private String basic(String username, String password) {
