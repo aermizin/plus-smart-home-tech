@@ -5,6 +5,7 @@ import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import ru.yandex.practicum.order.feign.config.InventoryFeignConfig;
+import ru.yandex.practicum.order.feign.invetory.dto.OrderReleaseResponse;
 import ru.yandex.practicum.order.feign.invetory.dto.OrderReserveRequest;
 import ru.yandex.practicum.order.feign.invetory.dto.OrderReserveResponse;
 
@@ -22,5 +23,5 @@ public interface InventoryClient {
     List<OrderReserveResponse> reserveStocks(@RequestBody List<OrderReserveRequest> requests);
 
     @PostMapping("/api/inventory/release/batch")
-    void releaseStocks(@RequestBody List<OrderReserveRequest> requests);
+    List<OrderReleaseResponse> releaseStocks(@RequestBody List<OrderReserveRequest> requests);
 }

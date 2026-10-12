@@ -3,10 +3,7 @@ package ru.yandex.practicum.inventory.service;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.Positive;
-import ru.yandex.practicum.inventory.dto.InventoryDto;
-import ru.yandex.practicum.inventory.dto.ReserveRequest;
-import ru.yandex.practicum.inventory.dto.ReserveResponse;
-import ru.yandex.practicum.inventory.dto.UpdateInventoryRequest;
+import ru.yandex.practicum.inventory.dto.*;
 
 import java.util.List;
 
@@ -24,7 +21,7 @@ public interface InventoryService {
 
     List<ReserveResponse> reserveStocks(@Valid List<ReserveRequest> requests);
 
-    void releaseStock(@Valid ReserveRequest request);
+    ReleaseResponse releaseStock(@Valid ReserveRequest request);
 
-    void releaseStocks(@Valid @NotEmpty List<ReserveRequest> requests);
+    List<ReleaseResponse> releaseStocks(@Valid @NotEmpty List<ReserveRequest> requests);
 }

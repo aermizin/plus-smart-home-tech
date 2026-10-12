@@ -16,6 +16,7 @@ import ru.yandex.practicum.order.exception.InventoryServiceUnavailableException;
 import ru.yandex.practicum.order.exception.OrderProcessingException;
 import ru.yandex.practicum.order.exception.ProductServiceUnavailableException;
 import ru.yandex.practicum.order.feign.invetory.InventoryClient;
+import ru.yandex.practicum.order.feign.invetory.dto.OrderReleaseResponse;
 import ru.yandex.practicum.order.feign.invetory.dto.OrderReserveRequest;
 import ru.yandex.practicum.order.feign.invetory.dto.OrderReserveResponse;
 import ru.yandex.practicum.order.feign.product.ProductClient;
@@ -94,7 +95,8 @@ public class OrderOrchestrationService {
         } catch (Exception e) {
             log.error("Сбой после резерва, откатываем резерв", e);
             try {
-                inventoryClient.releaseStocks(reserveRequests);
+                List<OrderReleaseResponse> releaseResponse = inventoryClient.releaseStocks(reserveRequests);
+                log.debug("Резерв {} товаров успешно снят", releaseResponse.size());
             } catch (Exception releaseEx) {
                 log.error("Не удалось откатить резерв", releaseEx);
             }

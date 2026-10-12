@@ -5,6 +5,7 @@ import org.springframework.cloud.openfeign.FallbackFactory;
 import org.springframework.stereotype.Component;
 import ru.yandex.practicum.order.exception.BusinessException;
 import ru.yandex.practicum.order.exception.InventoryServiceUnavailableException;
+import ru.yandex.practicum.order.feign.invetory.dto.OrderReleaseResponse;
 import ru.yandex.practicum.order.feign.invetory.dto.OrderReserveRequest;
 import ru.yandex.practicum.order.feign.invetory.dto.OrderReserveResponse;
 
@@ -41,7 +42,7 @@ public class InventoryClientFallbackFactory implements FallbackFactory<Inventory
             }
 
             @Override
-            public void releaseStocks(List<OrderReserveRequest> requests) {
+            public List<OrderReleaseResponse> releaseStocks(List<OrderReserveRequest> requests) {
                 List<Long> productIds = requests.stream()
                         .map(OrderReserveRequest::productId)
                         .toList();
