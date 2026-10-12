@@ -6,7 +6,7 @@ spring:
     gateway:
       discovery:
         locator:
-          enabled: true
+          enabled: false
 
       globalcors:
         add-to-simple-url-handler-mapping: true
@@ -100,3 +100,16 @@ spring:
           uri: lb://order-service
           predicates:
             - Path=/api/orders/**
+
+app:
+  security:
+    users:
+      - username: ivan
+        password: ivan
+        roles:
+          - USER
+      - username: anna
+        password: anna
+        roles:
+          - USER
+          - ADMIN

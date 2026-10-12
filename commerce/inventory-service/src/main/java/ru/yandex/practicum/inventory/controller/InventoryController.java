@@ -53,14 +53,13 @@ public class InventoryController {
 
     @PostMapping("/release")
     public ReleaseResponse releaseStock(@Valid @RequestBody ReserveRequest request) {
-        inventoryService.releaseStock(request);
-        return new ReleaseResponse(94,"Резерв снят", true);
+        return inventoryService.releaseStock(request);
 
     }
 
     @PostMapping("/release/batch")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    void releaseStocks(@Valid @RequestBody @NotEmpty List<ReserveRequest> requests) {
-        inventoryService.releaseStocks(requests);
+    List<ReleaseResponse> releaseStocks(@Valid @RequestBody @NotEmpty List<ReserveRequest> requests) {
+        return inventoryService.releaseStocks(requests);
     }
 }

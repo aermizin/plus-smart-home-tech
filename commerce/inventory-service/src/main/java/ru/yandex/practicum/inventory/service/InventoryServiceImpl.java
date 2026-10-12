@@ -5,10 +5,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import ru.yandex.practicum.inventory.dto.InventoryDto;
-import ru.yandex.practicum.inventory.dto.ReserveRequest;
-import ru.yandex.practicum.inventory.dto.ReserveResponse;
-import ru.yandex.practicum.inventory.dto.UpdateInventoryRequest;
+import ru.yandex.practicum.inventory.dto.*;
 import ru.yandex.practicum.inventory.entity.Inventory;
 import ru.yandex.practicum.inventory.exception.ConflictException;
 import ru.yandex.practicum.inventory.exception.NotFoundException;
@@ -135,7 +132,7 @@ public class InventoryServiceImpl implements InventoryService {
 
     @Override
     @Transactional
-    public void releaseStock(ReserveRequest request) {
+    public ReleaseResponse releaseStock(ReserveRequest request) {
         Inventory inventory = inventoryRepository.findByProductId(request.productId()).
                 orElseThrow(() -> new NotFoundException(String.format("Остаток для товара с id = %d не найден",
                         request.productId())));
@@ -145,11 +142,13 @@ public class InventoryServiceImpl implements InventoryService {
 
         log.debug("Снято резервирование с товара: productId={}, quantity={}",
                 request.productId(), request.quantity());
+
+        return new ReleaseResponse(inventory.getAvailableQuantity(), true, "Резерв снят");
     }
 
     @Override
     @Transactional
-    public void releaseStocks(List<ReserveRequest> requests) {
+    public List<ReleaseResponse> releaseStocks(List<ReserveRequest> requests) {
         Map<Long, Integer> quantityByProductId = sumQuantitiesByProductId(requests);
 
         List<Inventory> inventories = inventoryRepository.findByProductIdIn(quantityByProductId.keySet());
@@ -166,6 +165,10 @@ public class InventoryServiceImpl implements InventoryService {
         }
 
         log.debug("Снято резервирований {} позиций: {}", quantityByProductId.size(), quantityByProductId.keySet());
+
+        return inventories.stream()
+                .map(i -> new ReleaseResponse(i.getAvailableQuantity(), true, "Резерв снят"))
+                .toList();
     }
 
     private Map<Long, Integer> sumQuantitiesByProductId(List<ReserveRequest> requests) {
